@@ -3,11 +3,11 @@ applications:
   - name: hackathon-dotnet-app
     containers:
       - name: sample-app 
-        image: ghcr.io/liciniomendes-vestas/hackathon-2025-dotnet-samples/sample-app:master
+        image: registry-pminds.ns-azweu-stg.vks.vestas.net/hackathon-2025-dotnet-samples/sample-app:master
   - name: hackathon-database
     containers:
       - name: database
-        image: ghcr.io/liciniomendes-vestas/hackathon-2025-dotnet-samples/sample-db:master
+        image: registry-pminds.ns-azweu-stg.vks.vestas.net/hackathon-2025-dotnet-samples/sample-db:master
         volumes:
           - name: data
             path: /var/lib/postgresql/data
