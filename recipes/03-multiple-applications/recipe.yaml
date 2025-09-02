@@ -3,14 +3,15 @@ applications:
   - name: hackathon-dotnet-app
     containers:
       - name: sample-app 
-        image: registry-pminds.ns-azweu-stg.vks.vestas.net/hackathon-2025-dotnet-samples/sample-app:master
+        image: registry-pminds.ns-azweu-stg.vks.vestas.net/hackathon-2025-dotnet-samples/sample-app:sha-41512af
   - name: hackathon-database
     containers:
       - name: database
-        image: registry-pminds.ns-azweu-stg.vks.vestas.net/hackathon-2025-dotnet-samples/sample-db:master
+        image: registry-pminds.ns-azweu-stg.vks.vestas.net/hackathon-2025-dotnet-samples/sample-db:sha-41512af
         volumes:
           - name: data
             path: /var/lib/postgresql/data
             size: 200Mi
+            persistent: true
     ports:
       - port: 5432

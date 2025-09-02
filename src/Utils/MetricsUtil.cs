@@ -1,8 +1,6 @@
-
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.Metrics;
 using OpenTelemetry;
+using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 
@@ -10,7 +8,7 @@ namespace hackathon_dotnet.Utils
 {
     public class MetricsUtil(string endpoint)
     {
-        private MeterProvider?_meterProvider;
+        private MeterProvider? _meterProvider;
         private Meter? _meter;
 
         public void Init()
@@ -23,6 +21,7 @@ namespace hackathon_dotnet.Utils
                 .AddOtlpExporter(opt =>
                 {
                     opt.Endpoint = new Uri(endpoint);
+                    opt.Protocol = OtlpExportProtocol.HttpProtobuf;
                 })
                 .Build();
 

@@ -3,4 +3,4 @@ applications:
   - name: hackathon-dotnet-app
     containers:
       - name: sample-app 
-        image: registry-pminds.ns-azweu-stg.vks.vestas.net/hackathon-2025-dotnet-samples/sample-app:master
+        image: registry-pminds.ns-azweu-stg.vks.vestas.net/hackathon-2025-dotnet-samples/sample-app:sha-41512af
