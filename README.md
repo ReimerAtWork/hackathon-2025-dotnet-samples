@@ -45,5 +45,5 @@ The application is configured using environment variables.
 You can run the application using the following command:
 
 ```bash
-dotnet run
+dotnet run --project src/hackathon-dotnet.csproj
 ```
