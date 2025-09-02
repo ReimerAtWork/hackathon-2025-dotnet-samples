@@ -23,6 +23,7 @@ namespace hackathon_dotnet.Utils
                     opt.Endpoint = new Uri(endpoint);
                     opt.Protocol = OtlpExportProtocol.HttpProtobuf;
                 })
+                .AddMeter("hackathon-dotnet-sample")
                 .Build();
 
             _meter = new Meter("hackathon-dotnet-sample");
