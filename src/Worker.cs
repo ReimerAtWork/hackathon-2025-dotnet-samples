@@ -17,7 +17,7 @@ namespace hackathon_dotnet
     {
         #region Configuration
         // APC Connection Configuration
-        private const string APC_HOST = "localhost";
+        private const string APC_HOST = "wtgsim1.wl-we-want-to-code-more";
         private const int APC_PORT = 8008;
         
         // Data Collection Configuration
