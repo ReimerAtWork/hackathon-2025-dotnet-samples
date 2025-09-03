@@ -10,6 +10,11 @@ namespace hackathon_dotnet.Utils
     {
         private MeterProvider? _meterProvider;
         private Meter? _meter;
+        
+        // Pre-defined counters
+        private Counter<double>? _apiRequestsCounter;
+        private Counter<double>? _loopsCounter;
+        private Counter<double>? _rowsCreatedCounter;
 
         public void Init()
         {
@@ -27,17 +32,31 @@ namespace hackathon_dotnet.Utils
                 .Build();
 
             _meter = new Meter("hackathon-dotnet-sample");
+
+            // Create all counters upfront
+            _apiRequestsCounter = _meter.CreateCounter<double>("api_requests", description: "Number of API requests received");
+            _loopsCounter = _meter.CreateCounter<double>("loops", description: "Number of worker loops executed");
+            _rowsCreatedCounter = _meter.CreateCounter<double>("rows_created", description: "Number of database rows created");
         }
 
-        public void WriteCounter(string name, double value)
+        public void IncrementApiRequests(double value = 1)
         {
-            if (_meter == null) return;
-            var counter = _meter.CreateCounter<double>(name);
-            counter.Add(value);
+            _apiRequestsCounter?.Add(value);
+        }
+
+        public void IncrementLoops(double value = 1)
+        {
+            _loopsCounter?.Add(value);
+        }
+
+        public void IncrementRowsCreated(double value = 1)
+        {
+            _rowsCreatedCounter?.Add(value);
         }
 
         public void CleanUpMetrics()
         {
+            _meter?.Dispose();
             _meterProvider?.Dispose();
         }
     }

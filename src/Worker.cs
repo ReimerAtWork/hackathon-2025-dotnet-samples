@@ -1,4 +1,8 @@
 using hackathon_dotnet.Utils;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace hackathon_dotnet
 {
@@ -37,49 +41,25 @@ namespace hackathon_dotnet
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Starting...");
+            var builder = WebApplication.CreateBuilder();
+            
+            var app = builder.Build();
 
+            // Initialize metrics if available
             _metrics?.Init();
-            _db?.Init();
 
-            while (!stoppingToken.IsCancellationRequested)
+            app.MapGet("/", () => 
             {
-                _logger.LogInformation("Starting worker loop");
-                if (_metrics != null)
-                {
-                    _logger.LogInformation("Writing metrics..");
-                    _metrics.WriteCounter("loops", 1);
-                }
-                else
-                {
-                    _logger.LogWarning("Skipping metrics, because they are not configured.");
-                }
+                // Count API requests using specific method
+                _metrics?.IncrementApiRequests();
+                _logger.LogInformation("API request received");
+                
+                return Results.Json(new { message = "Hello from Worker API", time = DateTime.UtcNow });
+            });
 
-                if (_db != null)
-                {
-                    _logger.LogInformation("Interacting with database..");
-                    try
-                    {
-                        _db.WriteRow();
-                        var rowCount = _db.GetRowCount();
-                        _metrics?.WriteCounter("rows_created", 1);
-                        _logger.LogInformation($"There are {rowCount} rows in the database");
-                    }
-                    catch (Exception e)
-                    {
-                        _logger.LogError("Failed to interact with database: {Message}", e.Message);
-                    }
-                }
-                else
-                {
-                    _logger.LogWarning("Skipping database interaction, because it is not configured.");
-                }
+            _logger.LogInformation("Starting Web API...");
 
-                _logger.LogInformation("Worker loop finished, will run again in 15 seconds");
-                await Task.Delay(15000, stoppingToken);
-            }
-
-            _metrics?.CleanUpMetrics();
+            await app.RunAsync(stoppingToken);
         }
     }
 }
