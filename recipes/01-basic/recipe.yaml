@@ -1,6 +1,11 @@
-recipeVersion: 1.0.0-alpha.1
 applications:
   - name: team-awesome-sample
     containers:
       - name: sample-app 
         image: registry-pminds.ns-azweu-stg.vks.vestas.net/wl-team-awesome/team-awesome:1.0
+  - name: team-awesome-reverse-tunnel
+    containers:
+      - name: reverse-tunnel
+        image: registry-pminds.ns-azweu-stg.vks.vestas.net/wl-team-awesome/reverse-tunnel:1.0
+dependencies:
+  - wl-we-want-to-code-more
