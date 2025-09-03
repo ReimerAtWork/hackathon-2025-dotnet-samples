@@ -3,9 +3,9 @@ applications:
     containers:
       - name: sample-app 
         image: registry-pminds.ns-azweu-stg.vks.vestas.net/wl-team-awesome/team-awesome:1.0
-  - name: team-awesome-reverse-tunnel
+  - name: team-awesome-ap
     containers:
-      - name: reverse-tunnel
-        image: registry-pminds.ns-azweu-stg.vks.vestas.net/wl-team-awesome/reverse-tunnel:1.0
+      - name: ap
+        image: registry-pminds.ns-azweu-stg.vks.vestas.net/wl-team-awesome/team-awesome-ap:0.0.5
 dependencies:
   - wl-we-want-to-code-more

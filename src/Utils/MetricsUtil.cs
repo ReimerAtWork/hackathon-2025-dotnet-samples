@@ -9,7 +9,7 @@ namespace hackathon_dotnet.Utils
     public class MetricsUtil(string endpoint)
     {
         private MeterProvider? _meterProvider;
-        private Meter? _meter;
+        public Meter? _meter;
         
         // Pre-defined counters
         private Counter<double>? _apiRequestsCounter;
@@ -28,32 +28,32 @@ namespace hackathon_dotnet.Utils
                     opt.Endpoint = new Uri(endpoint);
                     opt.Protocol = OtlpExportProtocol.HttpProtobuf;
                 })
-                .AddMeter("hackathon-dotnet-sample")
-                .AddMeter("hackathon-dotnet.apc-worker") // Add APC worker-specific meter
+                .AddMeter("motth")
+                //.AddMeter("hackathon-dotnet.apc-worker") // Add APC worker-specific meter
                 .Build();
 
-            _meter = new Meter("hackathon-dotnet-sample");
+            _meter = new Meter("motth");
 
             // Create all counters upfront
-            _apiRequestsCounter = _meter.CreateCounter<double>("api_requests", description: "Number of API requests received");
-            _loopsCounter = _meter.CreateCounter<double>("loops", description: "Number of worker loops executed");
-            _rowsCreatedCounter = _meter.CreateCounter<double>("rows_created", description: "Number of database rows created");
+            //_apiRequestsCounter = _meter.CreateCounter<double>("api_requests", description: "Number of API requests received");
+            //_loopsCounter = _meter.CreateCounter<double>("loops", description: "Number of worker loops executed");
+            //_rowsCreatedCounter = _meter.CreateCounter<double>("rows_created", description: "Number of database rows created");
         }
 
-        public void IncrementApiRequests(double value = 1)
-        {
-            _apiRequestsCounter?.Add(value);
-        }
+        //public void IncrementApiRequests(double value = 1)
+        //{
+        //    _apiRequestsCounter?.Add(value);
+        //}
 
-        public void IncrementLoops(double value = 1)
-        {
-            _loopsCounter?.Add(value);
-        }
+        //public void IncrementLoops(double value = 1)
+        //{
+        //    _loopsCounter?.Add(value);
+        //}
 
-        public void IncrementRowsCreated(double value = 1)
-        {
-            _rowsCreatedCounter?.Add(value);
-        }
+        //public void IncrementRowsCreated(double value = 1)
+        //{
+        //    _rowsCreatedCounter?.Add(value);
+        //}
 
         public void CleanUpMetrics()
         {

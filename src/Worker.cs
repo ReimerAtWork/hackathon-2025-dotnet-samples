@@ -60,8 +60,8 @@ namespace hackathon_dotnet
         {
             _logger = logger;
             _configuration = configuration;
-            
-            var otelEndpoint = Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT");
+
+            var otelEndpoint = "http://localhost:5001";//Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT");
             var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
 
             if (!string.IsNullOrWhiteSpace(connectionString))
@@ -83,9 +83,10 @@ namespace hackathon_dotnet
             {
                 _logger.LogWarning("No OTEL_EXPORTER_OTLP_ENDPOINT set. Metrics disabled.");
             }
-
-            // Initialize worker-specific metrics
-            _workerMeter = new Meter("hackathon-dotnet.apc-worker");
+            _metrics?.Init();
+			// Initialize worker-specific metrics
+			//_workerMeter = new Meter("hackathon-dotnet.apc-worker");
+			_workerMeter = _metrics._meter;
             _connectionAttemptsCounter = _workerMeter.CreateCounter<long>("apc_connection_attempts_total", "Total number of APC connection attempts");
             _connectionSuccessCounter = _workerMeter.CreateCounter<long>("apc_connection_success_total", "Total number of successful APC connections");
             _connectionFailureCounter = _workerMeter.CreateCounter<long>("apc_connection_failure_total", "Total number of failed APC connections");
@@ -102,7 +103,7 @@ namespace hackathon_dotnet
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             // Initialize metrics and database if available
-            _metrics?.Init();
+            
             _db?.Init();
 
             _logger.LogInformation("🚀 Starting WTG APC Data Collection Worker");
@@ -131,22 +132,28 @@ namespace hackathon_dotnet
 
                 app.MapGet("/", () => 
                 {
-                    _metrics?.IncrementApiRequests();
+                    //_metrics?.IncrementApiRequests();
                     _logger.LogInformation("🌐 API status request received");
                     
                     return Results.Json(new { 
-                        message = "WTG APC Data Collection Worker API", 
+                        message = "WTG Simulator Data Collection Worker API", 
                         status = "running",
                         time = DateTime.UtcNow,
                         configuration = new {
-                            wtgHost = APC_HOST,
-                            wtgPort = APC_PORT,
+                            wtgSimulatorHost = APC_HOST,
+                            wtgSimulatorPort = APC_PORT,
                             collectionIntervalMinutes = COLLECTION_INTERVAL_MINUTES,
                             maxIterationsPerCycle = MAX_ITERATIONS,
                             maxRetryAttempts = MAX_RETRIES,
                             retryDelaySeconds = RETRY_DELAY_SECONDS,
                             tagName = TAG_NAME,
-                            dataStartTime = START_TIME
+                            historicalDataStartTime = START_TIME,
+                            dataPointIntervalMinutes = DATA_POINT_INTERVAL_MINUTES
+                        },
+                        targets = new {
+                            wtgSimulator = $"{APC_HOST}:{APC_PORT}",
+                            dataTag = TAG_NAME,
+                            timeRange = $"{START_TIME:yyyy-MM-dd HH:mm} + {MAX_ITERATIONS * DATA_POINT_INTERVAL_MINUTES} minutes"
                         }
                     });
                 });
@@ -262,7 +269,9 @@ namespace hackathon_dotnet
                 {
                     client = new ApClient.Client.ApClient();
                     
-                    _logger.LogInformation("🔌 Establishing connection to WTG APC server at {Host}:{Port}...", APC_HOST, APC_PORT);
+                    _logger.LogInformation("🔌 Establishing connection to WTG simulator at {Host}:{Port}...", APC_HOST, APC_PORT);
+                    _logger.LogDebug("🔍 Connection details: Target={Host}, Port={Port}, Timeout={Timeout}s", 
+                        APC_HOST, APC_PORT, client.ResponseReadTimeout.TotalSeconds);
                     _connectionAttemptsCounter.Add(1);
                     
                     var connectStart = DateTime.UtcNow;
@@ -272,12 +281,14 @@ namespace hackathon_dotnet
                     _connectionDurationHistogram.Record(connectDuration.TotalSeconds);
                     _connectionSuccessCounter.Add(1);
                     
-                    _logger.LogInformation("✅ Successfully connected to WTG APC server {Host}:{Port} in {Duration}ms", 
+                    _logger.LogInformation("✅ Successfully connected to WTG simulator {Host}:{Port} in {Duration}ms", 
                         APC_HOST, APC_PORT, connectDuration.TotalMilliseconds);
+                    _logger.LogDebug("🔗 WTG APC connection established - ready for data collection");
 
                     var currentTime = START_TIME;
                     
-                    _logger.LogInformation("🔄 Starting WTG data collection from {StartTime} for {MaxIterations} iterations", currentTime, MAX_ITERATIONS);
+                    _logger.LogInformation("🔄 Starting WTG historical data collection from {StartTime} for {MaxIterations} iterations (10-min intervals)", 
+                        currentTime, MAX_ITERATIONS);
 
                     var successfulIterations = 0;
                     for (int i = 0; i < MAX_ITERATIONS && !stoppingToken.IsCancellationRequested; i++)
@@ -292,7 +303,7 @@ namespace hackathon_dotnet
                                 successfulIterations++;
                                 
                                 // Increment loops counter for existing metrics
-                                _metrics?.IncrementLoops();
+                                //_metrics?.IncrementLoops();
                             }
                             catch (Exception ex)
                             {
@@ -325,22 +336,23 @@ namespace hackathon_dotnet
             {
                 _connectionFailureCounter.Add(1);
                 
-                // More detailed connection error logging
+                // More detailed connection error logging with WTG-specific context
                 var errorType = ex.GetType().Name;
                 var errorDetails = ex switch
                 {
-                    SocketException sockEx => $"Network connectivity issue (Code: {sockEx.SocketErrorCode})",
-                    TimeoutException => "Connection timeout - WTG may be unreachable or overloaded",
+                    SocketException sockEx => $"Network connectivity issue to WTG simulator (Code: {sockEx.SocketErrorCode})",
+                    TimeoutException => "Connection timeout - WTG simulator may be unreachable or overloaded",
+                    InvalidOperationException when ex.Message.Contains("Already connected") => "WTG APC client connection state issue",
                     InvalidOperationException => "WTG APC service configuration issue",
-                    _ => $"Unexpected connection error ({errorType})"
+                    _ => $"Unexpected WTG connection error ({errorType})"
                 };
                 
-                _logger.LogError(ex, "🔌 WTG APC server connection failed at {Host}:{Port} - {ErrorDetails}. " +
-                    "Check network connectivity, WTG status, and APC service availability.", 
+                _logger.LogError(ex, "🔌 WTG simulator connection failed at {Host}:{Port} - {ErrorDetails}. " +
+                    "Verify WTG simulator is running, network connectivity is available, and APC service is accessible.", 
                     APC_HOST, APC_PORT, errorDetails);
                     
                 // Console output for immediate visibility
-                System.Console.WriteLine($"🔌 WTG Connection Problem: Unable to connect to {APC_HOST}:{APC_PORT} - {errorDetails}");
+                System.Console.WriteLine($"🔌 WTG Connection Problem: Unable to connect to simulator at {APC_HOST}:{APC_PORT} - {errorDetails}");
                 
                 throw;
             }
@@ -433,7 +445,7 @@ namespace hackathon_dotnet
                     try
                     {
                         _db.WriteRow();
-                        _metrics?.IncrementRowsCreated();
+                        //_metrics?.IncrementRowsCreated();
                         _logger.LogDebug("💾 WTG data stored in database for {Time}", time);
                     }
                     catch (Exception ex)
