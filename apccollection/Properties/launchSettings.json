@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "apccollection": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "applicationUrl": "http://localhost:5001",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5001",
+        "ASPNETCORE_HTTPS_PORT": "",
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

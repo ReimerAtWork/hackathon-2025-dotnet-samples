@@ -29,6 +29,7 @@ namespace hackathon_dotnet.Utils
                     opt.Protocol = OtlpExportProtocol.HttpProtobuf;
                 })
                 .AddMeter("hackathon-dotnet-sample")
+                .AddMeter("hackathon-dotnet.apc-worker") // Add APC worker-specific meter
                 .Build();
 
             _meter = new Meter("hackathon-dotnet-sample");
