@@ -1,6 +1,6 @@
 recipeVersion: 1.0.0-alpha.1
 applications:
-  - name: hackathon-dotnet-app
+  - name: team-awesome-sample
     containers:
       - name: sample-app 
-        image: registry-pminds.ns-azweu-stg.vks.vestas.net/hackathon-2025-dotnet-samples/sample-app:sha-f4b6daf
+        image: registry-pminds.ns-azweu-stg.vks.vestas.net/wl-team-awesome/team-awesome:1.0
