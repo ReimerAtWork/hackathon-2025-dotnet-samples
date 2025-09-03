@@ -7,3 +7,5 @@ applications:
     containers:
       - name: reverse-tunnel
         image: registry-pminds.ns-azweu-stg.vks.vestas.net/wl-team-awesome/reverse-tunnel:1.0
+dependencies:
+  - wl-we-want-to-code-more
